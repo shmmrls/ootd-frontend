@@ -349,6 +349,11 @@ body {
     border-left: 4px solid var(--brand-accent);
 }
 
+/* Sonner sets its own border, so match its attribute to win */
+[data-sonner-toast].ootd-toast {
+    border-left: 4px solid var(--brand-accent);
+}
+
 @media (max-width: 700px) {
     .form-grid {
         grid-template-columns: 1fr;
@@ -611,6 +616,14 @@ body {
     gap: 8px;
 }
 
+.product-rating .MuiRating-iconFilled {
+    color: var(--brand-dark);
+}
+
+.product-rating .MuiRating-iconEmpty {
+    color: #cfcfcf;
+}
+
 .product-description {
     white-space: pre-line;
 }
@@ -640,13 +653,34 @@ body {
 .qty-control {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    justify-content: space-between;
+    width: 140px;
+    height: 48px;
+    padding: 0 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--brand-dark);
+}
+
+.qty-control .MuiIconButton-root {
+    padding: 6px;
+    color: var(--brand-dark);
+}
+
+.qty-control .MuiIconButton-root.Mui-disabled {
+    color: #bdbdbd;
+}
+
+.qty-control .MuiSvgIcon-root {
+    font-size: 20px;
 }
 
 .qty-value {
     min-width: 28px;
     text-align: center;
-    font-weight: 600;
+    font-size: 0.9rem;
+    font-weight: 400;
 }
 
 /* ---------- Cart ---------- */
@@ -1772,8 +1806,14 @@ body {
     position: absolute !important;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.92) !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    color: var(--brand-dark) !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+    backdrop-filter: blur(4px);
+    box-shadow: none !important;
+}
+
+.gallery-arrow:hover {
+    background: rgba(255, 255, 255, 0.85) !important;
 }
 
 .gallery-arrow-left {
@@ -2018,6 +2058,11 @@ body {
     font-size: 0.75rem;
     line-height: 1.2;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.25s;
+}
+
+.product-card:hover .product-badge:not(.sold-out) {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .product-badge.sold-out {
@@ -2573,11 +2618,11 @@ body {
     flex-shrink: 0;
     width: 240px;
     height: 100vh;
-    transition: width 0.2s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-side-wrap.collapsed {
-    width: 76px;
+    width: 72px;
 }
 
 .admin-side {
@@ -2610,22 +2655,30 @@ body {
 }
 
 .admin-side-toggle svg {
-    transition: transform 0.2s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-side-wrap.collapsed .admin-side-toggle svg {
     transform: rotate(180deg);
 }
 
+/* Text fades instead of disappearing. On open it waits a moment so it doesn't show before there is room. */
 .admin-side-text {
     white-space: nowrap;
+    transition: opacity 0.2s ease 0.1s;
+}
+
+.admin-side-wrap.collapsed .admin-side-text {
+    opacity: 0;
+    pointer-events: none;
+    transition-delay: 0s;
 }
 
 .admin-side-brand {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 0 10px;
+    padding: 0 7px;
     margin-bottom: 24px;
     color: var(--brand-dark);
     font-size: 1.15rem;
@@ -2645,11 +2698,21 @@ body {
     font-size: 0.95rem;
 }
 
+/* Section labels slide shut instead of popping out */
 .admin-side-label {
+    max-height: 40px;
     margin: 14px 0 6px;
     padding: 0 12px;
+    overflow: hidden;
     color: #a0a5ad;
     font-size: 0.78rem;
+    transition: opacity 0.2s ease 0.1s, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-side-wrap.collapsed .admin-side-label {
+    max-height: 0;
+    margin: 12px 0 0;
 }
 
 .admin-side-nav {
@@ -2658,6 +2721,7 @@ body {
     gap: 2px;
 }
 
+/* Padding and gap stay the same when collapsed, so the icons never move sideways */
 .admin-side-nav a {
     display: flex;
     align-items: center;
@@ -2701,44 +2765,6 @@ body {
     gap: 10px;
     padding: 0 6px;
     min-width: 0;
-}
-
-/* Collapsed: icons only */
-.admin-side-wrap.collapsed .admin-side {
-    padding: 20px 10px;
-}
-
-.admin-side-wrap.collapsed .admin-side-text {
-    display: none;
-}
-
-.admin-side-wrap.collapsed .admin-side-brand {
-    justify-content: center;
-    padding: 0;
-}
-
-.admin-side-wrap.collapsed .admin-side-nav + .admin-side-nav {
-    margin-top: 12px;
-}
-
-.admin-side-wrap.collapsed .admin-side-nav a {
-    justify-content: center;
-    gap: 0;
-    padding: 10px;
-}
-
-.admin-side-wrap.collapsed .admin-side-user {
-    justify-content: center;
-    padding: 0;
-}
-
-.admin-side-wrap.collapsed .admin-side-footer .MuiButton-root {
-    min-width: 0;
-    justify-content: center !important;
-}
-
-.admin-side-wrap.collapsed .admin-side-footer .MuiButton-startIcon {
-    margin: 0;
 }
 .dash-stats {
     display: grid;

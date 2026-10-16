@@ -22,13 +22,15 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import MetaData from '../Layout/MetaData';
 import { getProductDetails, getRelatedProducts, deleteProduct } from '../../actions/productActions';
-import { confirmDelete, notifyError, notifySuccess } from '../../Utils/helpers';
+import { notifyError, notifySuccess } from '../../Utils/helpers';
+import ConfirmDialog from '../Layout/ConfirmDialog';
 import { addToCart } from '../../actions/cartActions';
 import { getColorImages, getColors } from '../../Utils/productImages';
 import ProductCard from './ProductCard';
 import ListReviews from '../Review/ListReviews';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { DELETE_PRODUCT_RESET } from '../../constants/productConstants';
+import NotFound from '../Layout/NotFound';
 
 const VISIBLE_COLORS = 6;
 
@@ -161,6 +163,8 @@ function ProductDetailsSkeleton() {
 // Separate component so the selected image, size, color, and quantity reset whenever the product changes
 function ProductInfo({ product }) {
     const dispatch = useDispatch();
+    const [confirm, setConfirm] = useState({ open: false });
+    const closeConfirm = () => setConfirm((current) => ({ ...current, open: false }));
     const firstAvailable = product.variants.find((v) => v.stock > 0) || product.variants[0];
 
     const [activeImage, setActiveImage] = useState(0);
@@ -183,9 +187,14 @@ function ProductInfo({ product }) {
         }
     }, [isDeleted, isAdmin, dispatch, navigate]);
 
-    const handleDelete = async () => {
-        const confirmed = await confirmDelete(`Delete "${product.name}"? Its images and reviews will be removed too.`);
-        if (confirmed) dispatch(deleteProduct(product._id));
+    const handleDelete = () => {
+        setConfirm({
+            open: true,
+            title: 'Are you sure?',
+            text: `Delete "${product.name}"? Its images and reviews will be removed too.`,
+            confirmText: 'Yes, delete',
+            onConfirm: () => dispatch(deleteProduct(product._id)),
+        });
     };
 
     const sizes = [...new Set(product.variants.map((v) => v.size))];
@@ -299,9 +308,9 @@ function ProductInfo({ product }) {
                 </Typography>
 
                 <div className="product-rating">
-                    <Rating value={product.ratings} precision={0.5} readOnly />
-                    <Typography variant="body2" color="text.secondary">
-                        ({product.numOfReviews} review{product.numOfReviews === 1 ? '' : 's'})
+                    <Rating value={product.ratings} precision={0.5} size="small" readOnly />
+                    <Typography variant="body2">
+                        {product.numOfReviews} review{product.numOfReviews === 1 ? '' : 's'}
                     </Typography>
                 </div>
 
@@ -392,7 +401,7 @@ function ProductInfo({ product }) {
                 ) : (
                     <>
                         <div className="option-group">
-                            <Typography variant="subtitle2">Quantity</Typography>
+                            <Typography variant="body2">Quantity:</Typography>
                             <div className="qty-control">
                                 <IconButton
                                     size="small"
@@ -475,6 +484,7 @@ function ProductInfo({ product }) {
                 </div>
             </div>
         </Drawer>
+        <ConfirmDialog {...confirm} onClose={closeConfirm} />
         </>
     );
 }
@@ -482,7 +492,7 @@ function ProductInfo({ product }) {
 export default function ProductDetails() {
     const { id } = useParams();
     const dispatch = useDispatch();
-    const { product, error } = useSelector((state) => state.productDetails);
+    const { product, error, status } = useSelector((state) => state.productDetails);
     const { products: related } = useSelector((state) => state.relatedProducts);
 
     useEffect(() => {
@@ -493,6 +503,10 @@ export default function ProductDetails() {
 
     // The store can still hold the previously viewed product for one render
     const ready = product && product._id === id;
+
+    if (error && (status === 404 || status === 400)) {
+        return <NotFound />;
+    }
 
     if (error) {
         return (
