@@ -1,19 +1,82 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, IconButton, Typography } from '@mui/material';
+import { Badge, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
+import ShoppingBasketOutlinedIcon from '@mui/icons-material/ShoppingBasketOutlined';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { removeFromCart, updateCartQuantity } from '../../actions/cartActions';
+import { checkCartStock, removeFromCart, updateCartQuantity } from '../../actions/cartActions';
 import { notifyInfo, peso } from '../../Utils/helpers';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+
+
+function StockDialog({ issues, onClose }) {
+    return (
+        <Dialog
+            open={issues.length > 0}
+            onClose={onClose}
+            maxWidth="xs"
+            fullWidth
+            slotProps={{
+                backdrop: { sx: { bgcolor: 'rgba(31, 31, 31, 0.45)', backdropFilter: 'blur(3px)' } },
+                paper: { sx: { borderRadius: '20px', border: '1px solid #eceef2', boxShadow: '0 24px 60px rgba(31, 31, 31, 0.18)', p: 1 } },
+            }}
+        >
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontWeight: 700, fontSize: '1.2rem' }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'rgba(200, 85, 61, 0.12)', flexShrink: 0 }}>
+                    <WarningAmberRoundedIcon color="secondary" fontSize="small" />
+                </Box>
+                Your cart was updated
+            </DialogTitle>
+            <DialogContent>
+                <Typography sx={{ color: '#6b6b6b', mb: 1.5 }}>
+                    Stock changed while you were checking out, so we fixed these items:
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'grid', gap: 1 }}>
+                    {issues.map((i) => (
+                        <li key={`${i.product}|${i.size}|${i.color}`}>
+                            <strong>{i.name}</strong> ({i.size} / {i.color}):{' '}
+                            {i.available > 0 ? `only ${i.available} left, quantity lowered` : 'sold out, removed from your cart'}
+                        </li>
+                    ))}
+                </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button variant="contained" color="secondary" disableElevation onClick={onClose} autoFocus sx={{ borderRadius: 99, px: 2.5, height: 40 }}>
+                    Got it
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
 
 export default function Cart() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { cartItems } = useSelector((state) => state.cart);
     const { user, loading } = useSelector((state) => state.auth);
+    const location = useLocation();
+    // Problems can come from the checkout redirect (location.state) or from the check below
+    const [stockIssues, setStockIssues] = useState(location.state?.stockIssues || []);
+    const stockChecked = useRef(false);
+
+    // Check the stock as soon as the cart opens, once the saved login has settled
+    useEffect(() => {
+        if (loading || stockChecked.current) return;
+        stockChecked.current = true;
+        dispatch(checkCartStock()).then((issues) => {
+            if (issues.length > 0) setStockIssues(issues);
+        });
+    }, [loading, dispatch]);
+
+    const closeStockDialog = () => {
+        setStockIssues([]);
+        if (location.state) navigate('/cart', { replace: true, state: null });
+    };
 
     const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -34,8 +97,11 @@ export default function Cart() {
         return (
             <div className="cart-empty page-enter">
                 <div className="cart-empty-icon">
-                    <ShoppingBagOutlinedIcon />
+                    <Badge badgeContent={0} showZero>
+                        <ShoppingBasketOutlinedIcon />
+                    </Badge>
                 </div>
+                <StockDialog issues={stockIssues} onClose={closeStockDialog} />
                 <Typography variant="h5" component="h1" className="cart-empty-title">
                     Your cart is empty
                 </Typography>
@@ -134,11 +200,12 @@ export default function Cart() {
                         <span>Total</span>
                         <span>{peso(total)}</span>
                     </div>
-                    <Button variant="contained" size="large" onClick={handleCheckout} className="cart-checkout-btn">
-                        Proceed to checkout
+                    <Button variant="contained" size="large" onClick={handleCheckout} className="cart-checkout-btn" startIcon={<LockOutlinedIcon />}>
+                        Checkout
                     </Button>
                 </aside>
             </div>
+            <StockDialog issues={stockIssues} onClose={closeStockDialog} />
         </div>
     );
 }

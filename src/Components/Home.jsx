@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { Button, Typography } from '@mui/material';
 import Catalog from './Product/Catalog';
 import heroImage from '../assets/ootd-hero.jpg';
+import { notifyError } from '../Utils/helpers';
+import { toast } from 'sonner'
 
 export default function Home() {
     const { user } = useSelector((state) => state.auth);
@@ -19,6 +21,10 @@ export default function Home() {
         if (searching) scrollToShop();
     }, [searching, searchParams, location.key]);
 
+    useEffect(() => {
+        if (location.state?.denied) toast.error("You don't have access to that page", { id: 'access-denied' });
+    }, [location.state]);
+    
     return (
         <>
             <section className="home-hero">

@@ -1,5 +1,6 @@
 import { getColorImageUrl } from '../Utils/productImages';
 import { ADD_TO_CART, REMOVE_FROM_CART, CLEAR_CART, SAVE_SHIPPING_INFO } from '../constants/cartConstants';
+import api from '../api';
 
 // Guests use 'cartItems'. A logged-in user gets their own key.
 const cartStorageKey = (getState) => {
@@ -98,5 +99,43 @@ export const loadUserCart = (user) => (dispatch, getState) => {
         localStorage.removeItem('cartItems'); // the guest cart now lives in the user's cart
     } catch {
         // Storage blocked: the cart just stays as it is
+    }
+};
+
+// Removes sold-out lines and lowers quantities to what is still in stock
+export const applyStockIssues = (issues) => (dispatch, getState) => {
+    issues.forEach(({ product, size, color, available }) => {
+        const key = getCartKey(product, size, color);
+        const item = getState().cart.cartItems.find((i) => i.key === key);
+        if (!item) return;
+
+        if (available <= 0) {
+            dispatch({ type: REMOVE_FROM_CART, payload: key });
+        } else {
+            dispatch({ type: ADD_TO_CART, payload: { ...item, quantity: Math.min(item.quantity, available), stock: available } });
+        }
+    });
+    saveCart(getState);
+};
+
+// Asks the server which cart lines can't be bought as they are, fixes the cart,
+// and returns the problems so the cart page can show them in a modal
+export const checkCartStock = () => async (dispatch, getState) => {
+    const items = getState().cart.cartItems;
+    if (items.length === 0) return [];
+
+    try {
+        const { data } = await api.post('/cart/stock-check', {
+            items: items.map(({ product, size, color, quantity }) => ({ product, size, color, quantity })),
+        });
+        const issues = (data.stockIssues || []).map((issue) => {
+            const item = items.find((i) => i.key === getCartKey(issue.product, issue.size, issue.color));
+            return { ...issue, name: item?.name || issue.name };
+        });
+        if (issues.length > 0) dispatch(applyStockIssues(issues));
+        return issues;
+    } catch {
+        // No connection: the cart still works, and checkout checks the stock again
+        return [];
     }
 };

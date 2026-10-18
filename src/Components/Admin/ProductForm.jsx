@@ -149,6 +149,7 @@ const getInitialValues = (product, colors) => ({
 export default function ProductForm({ product, onSubmit, submitLabel, loading }) {
     // Photos live outside Formik because they upload in the background and update at different times
     const [colors, setColors] = useState(() => getInitialColors(product));
+    const [initialValues] = useState(() => getInitialValues(product, colors));
     const [colorErrors, setColorErrors] = useState({});
     // Always holds the latest colors, for code that runs later (uploads, submit)
     const colorsRef = useRef(colors);
@@ -174,7 +175,7 @@ export default function ProductForm({ product, onSubmit, submitLabel, loading })
     const uploading = colors.some((c) => c.images.some((i) => i.uploading));
 
     const formik = useFormik({
-        initialValues: getInitialValues(product, colors),
+        initialValues,
         validationSchema,
         validateOnChange: false,
         validateOnBlur: false,
@@ -290,6 +291,17 @@ export default function ProductForm({ product, onSubmit, submitLabel, loading })
 
     const makeMain = (colorId, img) =>
         updateColor(colorId, (c) => ({ images: [img, ...c.images.filter((i) => i.key !== img.key)] }));
+
+    const reorderPhotos = (colorId, fromKey, toKey) =>
+        updateColor(colorId, (c) => {
+            const from = c.images.findIndex((i) => i.key === fromKey);
+            const to = c.images.findIndex((i) => i.key === toKey);
+            if (from === -1 || to === -1 || from === to) return { images: c.images };
+            const next = [...c.images];
+            const [moved] = next.splice(from, 1);
+            next.splice(to, 0, moved);
+            return { images: next };
+        });
 
     // ---- sizes ----
     const addVariant = () =>
@@ -431,6 +443,7 @@ export default function ProductForm({ product, onSubmit, submitLabel, loading })
                                         onFiles={(files) => handleFiles(color.id, files)}
                                         onRemove={(img) => removePhoto(color.id, img)}
                                         onMakeMain={(img) => makeMain(color.id, img)}
+                                        onReorder={(fromKey, toKey) => reorderPhotos(color.id, fromKey, toKey)}
                                     />
                                     {colorErrors[color.id] && (
                                         <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5 }}>
