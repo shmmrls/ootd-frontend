@@ -1,13 +1,9 @@
+// MP2 · Filters + Q3 · Infinite scroll — product listing + filter state.
+// Reads ?q/?category, holds price/rating/review filters and dispatches fetch/loadMore to /products.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-    Badge,
-    Button,
-    Chip,
-    MenuItem,
-    Select,
-    Typography,
-} from '@mui/material';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { Badge, Button, Chip, MenuItem, Select, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import TuneIcon from '@mui/icons-material/Tune';
 import api from '../../api';
@@ -17,9 +13,9 @@ import { CATEGORIES } from '../../constants/productConstants';
 import FilterDrawer from './FilterDrawer';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
-import { useLocation, useSearchParams } from 'react-router-dom';
 
 const PAGE_SIZE = 8; // same as the limit in getProducts
+
 const emptyFilters = {
     keyword: '',
     category: 'All',
@@ -39,32 +35,43 @@ const SORT_OPTIONS = [
     { value: 'popular', label: 'Most reviewed' },
 ];
 
-// Reads ?category=Tops from the URL (the footer links use it). Unknown values are ignored.
-const categoryFromUrl = (value) => ['All', ...CATEGORIES].find((c) => c.toLowerCase() === (value || '').toLowerCase());
+// Reads ?category=Tops from the URL (footer links use it). Unknown values are ignored.
+const categoryFromUrl = (value) =>
+    ['All', ...CATEGORIES].find((c) => c.toLowerCase() === (value || '').toLowerCase());
 
 const priceLabel = ({ minPrice, maxPrice }) => {
-    if (minPrice !== '' && maxPrice !== '') return `${peso(Number(minPrice))} – ${peso(Number(maxPrice))}`;
+    if (minPrice !== '' && maxPrice !== '')
+        return `${peso(Number(minPrice))} – ${peso(Number(maxPrice))}`;
     if (minPrice !== '') return `${peso(Number(minPrice))} and up`;
     return `Up to ${peso(Number(maxPrice))}`;
 };
 
 export default function Catalog() {
     const dispatch = useDispatch();
-    const { products, loading, error, hasMore, page, total } = useSelector((state) => state.catalog);
+    const { products, loading, error, hasMore, page } = useSelector((state) => state.catalog);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
     const keyword = (searchParams.get('q') || '').trim();
     const urlCategory = categoryFromUrl(searchParams.get('category'));
 
-    const [options, setFilters] = useState(() => ({ ...emptyFilters, category: urlCategory ?? 'All' }));
+    const [options, setFilters] = useState(() => ({
+        ...emptyFilters,
+        category: urlCategory ?? 'All',
+    }));
     const filters = useMemo(() => ({ ...options, keyword }), [options, keyword]);
 
-    // Footer links like /?category=Tops: apply that category every time one is clicked
-    useEffect(() => {
-        if (!urlCategory) return;
-        setFilters((prev) => (prev.category === urlCategory ? prev : { ...prev, category: urlCategory }));
-    }, [urlCategory, location.key]);
+    // Footer links like /?category=Tops: apply that category every time one is clicked.
+    // Adjusting state during render keeps the URL as the source of truth without an effect.
+    const categorySource = `${urlCategory ?? ''}|${location.key}`;
+    const [lastCategorySource, setLastCategorySource] = useState(categorySource);
+
+    if (urlCategory && categorySource !== lastCategorySource) {
+        setLastCategorySource(categorySource);
+        setFilters((prev) =>
+            prev.category === urlCategory ? prev : { ...prev, category: urlCategory },
+        );
+    }
 
     const clearKeyword = () =>
         setSearchParams(
@@ -73,13 +80,12 @@ export default function Catalog() {
                 next.delete('q');
                 return next;
             },
-            { replace: true }
+            { replace: true },
         );
+
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [maxPrice, setMaxPrice] = useState(0);
     const sentinel = useRef(null);
-
-    // Search applies by itself shortly after typing stops, so there is no Apply button to press
 
     // Highest price in the shop, used as the end of the price slider in the filter drawer
     useEffect(() => {
@@ -93,7 +99,7 @@ export default function Catalog() {
         dispatch(getProducts(filters, 1));
     }, [dispatch, filters]);
 
-    // Infinite scroll.
+    // Infinite scroll: load the next page when the bottom marker comes near the screen
     useEffect(() => {
         const node = sentinel.current;
         if (!node) return;
@@ -102,24 +108,44 @@ export default function Catalog() {
             ([entry]) => {
                 if (entry.isIntersecting) dispatch(loadMoreProducts(filters));
             },
-            { rootMargin: '300px' }
+            { rootMargin: '300px' },
         );
         observer.observe(node);
         return () => observer.disconnect();
     }, [dispatch, filters, hasMore, loading, page]);
 
-    // One removable chip for each filter that is switched on (search and sort have their own controls)
+    // One removable chip per active filter (search and sort have their own controls)
     const activeChips = useMemo(() => {
         const chips = [];
-        if (filters.category !== 'All') chips.push({ key: 'category', label: filters.category, reset: { category: 'All' } });
-        if (filters.gender !== 'All') chips.push({ key: 'gender', label: filters.gender, reset: { gender: 'All' } });
+        if (filters.category !== 'All')
+            chips.push({
+                key: 'category',
+                label: filters.category,
+                reset: { category: 'All' },
+            });
+        if (filters.gender !== 'All')
+            chips.push({
+                key: 'gender',
+                label: filters.gender,
+                reset: { gender: 'All' },
+            });
         if (filters.minPrice !== '' || filters.maxPrice !== '')
-            chips.push({ key: 'price', label: priceLabel(filters), reset: { minPrice: '', maxPrice: '' } });
-        if (filters.rating !== 'All') chips.push({ key: 'rating', label: `${filters.rating}★ & up`, reset: { rating: 'All' } });
+            chips.push({
+                key: 'price',
+                label: priceLabel(filters),
+                reset: { minPrice: '', maxPrice: '' },
+            });
+        if (filters.rating !== 'All')
+            chips.push({
+                key: 'rating',
+                label: `${filters.rating}★ & up`,
+                reset: { rating: 'All' },
+            });
         if (filters.minReviews !== 'All')
             chips.push({
                 key: 'reviews',
-                label: filters.minReviews === '1' ? 'Has reviews' : `${filters.minReviews}+ reviews`,
+                label:
+                    filters.minReviews === '1' ? 'Has reviews' : `${filters.minReviews}+ reviews`,
                 reset: { minReviews: 'All' },
             });
         return chips;
@@ -136,8 +162,6 @@ export default function Catalog() {
 
     return (
         <section>
-
-
             <div className="catalog-toolbar">
                 <Badge badgeContent={activeChips.length} color="secondary">
                     <Button
@@ -166,7 +190,9 @@ export default function Catalog() {
                     renderValue={(value) => (
                         <>
                             <strong>Sort by:</strong>{' '}
-                            <span className="hover-underline">{SORT_OPTIONS.find((o) => o.value === value)?.label}</span>
+                            <span className="hover-underline">
+                                {SORT_OPTIONS.find((o) => o.value === value)?.label}
+                            </span>
                         </>
                     )}
                     MenuProps={{
@@ -186,7 +212,11 @@ export default function Catalog() {
                     }}
                     sx={{
                         fontSize: '0.875rem',
-                        '& .MuiSelect-select.MuiSelect-standard': { pr: '40px !important', '&:focus': { bgcolor: 'transparent' } },
+                        '& .MuiSelect-select.MuiSelect-standard': {
+                            pr: '40px !important',
+                            '&:focus': { bgcolor: 'transparent' },
+                        },
+                        // Arrow icon: light gray by default, black on hover
                         '& .MuiSelect-icon': {
                             right: 0,
                             width: 26,
@@ -194,15 +224,16 @@ export default function Catalog() {
                             top: 'calc(50% - 13px)',
                             p: '4px',
                             borderRadius: '50%',
-                            bgcolor: '#e9e9e9',              // light gray when not hovered
+                            bgcolor: '#e9e9e9',
                             color: 'var(--brand-dark)',
                             transition: 'background-color 0.2s, color 0.2s, transform 0.2s',
                         },
                         '&:hover .MuiSelect-icon': {
-                            bgcolor: 'var(--brand-dark)',    // black on hover
+                            bgcolor: 'var(--brand-dark)',
                             color: '#fff',
                         },
-                        '&:hover .hover-underline, & .MuiSelect-select[aria-expanded="true"] .hover-underline': {
+                        ['&:hover .hover-underline, ' +
+                        '& .MuiSelect-select[aria-expanded="true"] .hover-underline']: {
                             backgroundSize: '100% 1px',
                             backgroundPosition: '0 100%',
                         },
@@ -218,8 +249,12 @@ export default function Catalog() {
                                 py: 1.25,
                                 fontSize: '0.875rem',
                                 color: '#6b6b6b',
-                                '&:hover, &.Mui-focusVisible': { bgcolor: 'transparent', color: 'var(--brand-dark)' },
-                                '&.Mui-selected, &.Mui-selected:hover, &.Mui-selected.Mui-focusVisible': {
+                                '&:hover, &.Mui-focusVisible': {
+                                    bgcolor: 'transparent',
+                                    color: 'var(--brand-dark)',
+                                },
+                                ['&.Mui-selected, &.Mui-selected:hover, ' +
+                                '&.Mui-selected.Mui-focusVisible']: {
                                     bgcolor: 'transparent',
                                     color: 'var(--brand-dark)',
                                 },
@@ -237,7 +272,11 @@ export default function Catalog() {
                         <Chip label={`“${filters.keyword}”`} onDelete={clearKeyword} />
                     )}
                     {activeChips.map((chip) => (
-                        <Chip key={chip.key} label={chip.label} onDelete={() => removeChip(chip.reset)} />
+                        <Chip
+                            key={chip.key}
+                            label={chip.label}
+                            onDelete={() => removeChip(chip.reset)}
+                        />
                     ))}
                     <Button size="small" color="secondary" onClick={clearAll}>
                         Clear all
@@ -249,7 +288,9 @@ export default function Catalog() {
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 applied={filters}
-                onApply={(next) => setFilters({ ...next, keyword: filters.keyword, sort: filters.sort })}
+                onApply={(next) =>
+                    setFilters({ ...next, keyword: filters.keyword, sort: filters.sort })
+                }
                 emptyFilters={emptyFilters}
                 maxPrice={maxPrice}
             />
@@ -257,17 +298,21 @@ export default function Catalog() {
             {error && (
                 <div className="catalog-message">
                     <Typography color="error">{error}</Typography>
-                    <Button onClick={() => dispatch(getProducts(filters, page + 1))}>Try again</Button>
+                    <Button onClick={() => dispatch(getProducts(filters, page + 1))}>
+                        Try again
+                    </Button>
                 </div>
             )}
 
             <div className="product-grid" aria-busy={loading}>
-                 {products.map((product) => (
-                     <ProductCard key={product._id} product={product} />
-                 ))}
+                {products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                ))}
                 {loading &&
-                    Array.from({ length: PAGE_SIZE }, (_, i) => <ProductCardSkeleton key={`skeleton-${i}`} />)}
-             </div>
+                    Array.from({ length: PAGE_SIZE }, (_, i) => (
+                        <ProductCardSkeleton key={`skeleton-${i}`} />
+                    ))}
+            </div>
 
             {!loading && !error && page > 0 && products.length === 0 && (
                 <div className="catalog-message">
@@ -279,6 +324,7 @@ export default function Catalog() {
                     )}
                 </div>
             )}
+
             {!loading && !error && !hasMore && products.length > 0 && (
                 <Typography className="catalog-message" color="text.secondary">
                     You've reached the end.

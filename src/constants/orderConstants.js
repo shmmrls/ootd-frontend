@@ -1,3 +1,5 @@
+// TTL · Transactions — order action type constants.
+// Consumed by reducers/orderReducers.js to update order state as thunks resolve.
 export const NEW_ORDER_REQUEST = 'NEW_ORDER_REQUEST';
 export const NEW_ORDER_SUCCESS = 'NEW_ORDER_SUCCESS';
 export const NEW_ORDER_FAIL = 'NEW_ORDER_FAIL';
@@ -15,11 +17,15 @@ export const ADMIN_ORDERS_REQUEST = 'ADMIN_ORDERS_REQUEST';
 export const ADMIN_ORDERS_SUCCESS = 'ADMIN_ORDERS_SUCCESS';
 export const ADMIN_ORDERS_FAIL = 'ADMIN_ORDERS_FAIL';
 
+// The number on the Orders badge in the admin sidebar
+export const PROCESSING_COUNT_REQUEST = 'PROCESSING_COUNT_REQUEST';
+export const PROCESSING_COUNT_SUCCESS = 'PROCESSING_COUNT_SUCCESS';
+export const PROCESSING_COUNT_FAIL = 'PROCESSING_COUNT_FAIL';
+
 export const UPDATE_ORDER_REQUEST = 'UPDATE_ORDER_REQUEST';
 export const UPDATE_ORDER_SUCCESS = 'UPDATE_ORDER_SUCCESS';
 export const UPDATE_ORDER_FAIL = 'UPDATE_ORDER_FAIL';
 export const UPDATE_ORDER_RESET = 'UPDATE_ORDER_RESET';
-
 
 // These must match backend/utils/constants.js and NEXT_STATUSES in backend/controllers/order.js
 export const ORDER_STATUSES = ['Processing', 'Shipped', 'Delivered', 'Cancelled'];

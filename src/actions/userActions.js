@@ -1,3 +1,5 @@
+// Q4 · Clerk login + U1-B · Validation — auth/profile/user thunks.
+// syncUser maps the Clerk session to our DB user; updateMyProfile and admin user actions call /api/v1.
 import api from '../api';
 import { getErrorMessage } from '../Utils/helpers';
 import {
@@ -18,7 +20,7 @@ import {
     USER_DETAILS_FAIL,
     UPDATE_USER_REQUEST,
     UPDATE_USER_SUCCESS,
-    UPDATE_USER_FAIL
+    UPDATE_USER_FAIL,
 } from '../constants/userConstants';
 import { CLEAR_CART } from '../constants/cartConstants';
 import { loadUserCart } from './cartActions';
@@ -46,17 +48,21 @@ const fetchProfile = () => {
 export const syncUser = (isSignedIn) => async (dispatch) => {
     if (!isSignedIn) {
         dispatch({ type: LOGOUT_SUCCESS });
-        return;
+        return null;
     }
     try {
         dispatch({ type: LOGIN_REQUEST });
         const user = await fetchProfile();
         dispatch({ type: LOGIN_SUCCESS, payload: user });
         dispatch(loadUserCart(user));
+        return user;
     } catch (error) {
         dispatch({ type: LOGIN_FAIL, payload: getErrorMessage(error) });
+        return null;
     }
 };
+
+export const getPostLoginPath = (user, from = '/') => (user?.role === 'admin' ? '/admin' : from);
 
 export const logout = () => async (dispatch) => {
     try {
@@ -123,6 +129,17 @@ export const updateUser = (id, isActive) => async (dispatch) => {
     try {
         dispatch({ type: UPDATE_USER_REQUEST });
         const { data } = await api.put(`/admin/user/${id}`, { isActive });
+        dispatch({ type: UPDATE_USER_SUCCESS, payload: data.user });
+    } catch (error) {
+        dispatch({ type: UPDATE_USER_FAIL, payload: getErrorMessage(error) });
+    }
+};
+
+// role: 'admin' or 'customer'
+export const updateUserRole = (id, role) => async (dispatch) => {
+    try {
+        dispatch({ type: UPDATE_USER_REQUEST });
+        const { data } = await api.put(`/admin/user/${id}`, { role });
         dispatch({ type: UPDATE_USER_SUCCESS, payload: data.user });
     } catch (error) {
         dispatch({ type: UPDATE_USER_FAIL, payload: getErrorMessage(error) });

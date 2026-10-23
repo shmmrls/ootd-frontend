@@ -1,3 +1,5 @@
+/* U2 · UI design (custom CSS) — all hand-written styles: layout, product grid, hero,
+   animations and responsive breakpoints; imported once in main.jsx and used alongside MUI sx. */
 :root {
     --brand-dark: #1f1f1f;
     --brand-accent: #c8553d;
@@ -96,7 +98,10 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateY(16px) scale(0.9);
-    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease,
+        visibility 0.25s;
 }
 
 .scroll-top-visible {
@@ -127,35 +132,6 @@ body {
 
 .home-subtitle {
     margin: 16px 0 24px;
-}
-
-/* Login and register */
-.auth-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 24px 0;
-}
-
-.auth-card {
-    width: 100%;
-    max-width: 420px;
-    padding: 32px;
-}
-
-.auth-title {
-    margin-bottom: 24px;
-    text-align: center;
-}
-
-.form-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.auth-footer {
-    margin-top: 16px;
-    text-align: center;
 }
 
 /* Admin layout */
@@ -473,14 +449,39 @@ body {
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: #e8e4de;
-    color: var(--brand-dark);
-    transition: background 0.2s ease, color 0.2s ease;
+    background: #fff;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    color: #000;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.filter-accordion .MuiAccordionSummary-root:hover .filter-chevron {
+    background: #f0f0f0;
 }
 
 .filter-accordion .MuiAccordionSummary-expandIconWrapper.Mui-expanded .filter-chevron {
-    background: var(--brand-dark);
+    background: #000;
     color: #fff;
+}
+
+.filter-apply-btn.MuiButton-root {
+    background: #000;
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.filter-apply-btn.MuiButton-root:hover {
+    background: #262626;
+    box-shadow: none;
+}
+
+.filter-apply-btn.MuiButton-root.Mui-disabled {
+    background: #e5e5e5;
+    color: #9a9a9a;
 }
 
 .filter-drawer-footer {
@@ -601,7 +602,6 @@ body {
     user-select: none;
 }
 
-
 .product-thumbs {
     display: flex;
     flex-wrap: wrap;
@@ -710,13 +710,26 @@ body {
 }
 
 @keyframes stock-pulse {
-    from { transform: scale(1); opacity: 0.55; }
-    to   { transform: scale(2.6); opacity: 0; }
+    from {
+        transform: scale(1);
+        opacity: 0.55;
+    }
+    to {
+        transform: scale(2.6);
+        opacity: 0;
+    }
 }
 
-.stock-in  { --stock-color: #7cc242; }
-.stock-low { --stock-color: #e0a526; }
-.stock-out { --stock-color: var(--brand-accent); color: #8a8f98; }
+.stock-in {
+    --stock-color: #7cc242;
+}
+.stock-low {
+    --stock-color: #e0a526;
+}
+.stock-out {
+    --stock-color: var(--brand-accent);
+    color: #8a8f98;
+}
 
 @media (max-width: 480px) {
     .product-title-row {
@@ -797,7 +810,9 @@ body {
     background: #fff;
     border: 1px solid #e5e0d8;
     border-radius: 12px;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition:
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .cart-row:hover {
@@ -967,7 +982,6 @@ body {
     text-transform: none;
     font-weight: 600;
 }
-
 /* Order placed */
 .order-done {
     display: flex;
@@ -1136,12 +1150,26 @@ body {
         gap: 12px;
     }
 
-    .cart-row-image-link { grid-area: img; }
-    .cart-row-image { width: 80px; height: 80px; }
-    .cart-row-info { grid-area: info; }
-    .cart-row-remove { grid-area: remove; }
-    .cart-row-qty { grid-area: qty; justify-self: start; }
-    .cart-row-subtotal.MuiTypography-root { grid-area: subtotal; }
+    .cart-row-image-link {
+        grid-area: img;
+    }
+    .cart-row-image {
+        width: 80px;
+        height: 80px;
+    }
+    .cart-row-info {
+        grid-area: info;
+    }
+    .cart-row-remove {
+        grid-area: remove;
+    }
+    .cart-row-qty {
+        grid-area: qty;
+        justify-self: start;
+    }
+    .cart-row-subtotal.MuiTypography-root {
+        grid-area: subtotal;
+    }
 }
 
 /* Checkout and orders */
@@ -1202,7 +1230,6 @@ body {
         grid-template-columns: 1fr;
     }
 }
-
 
 /* ---------- Customer reviews ---------- */
 .reviews {
@@ -1487,7 +1514,6 @@ body {
     padding: 24px 0;
 }
 
-
 /* No reviews yet: animation only, the look comes from MUI */
 .reviews-empty-anim {
     animation: reviews-rise 0.5s ease both;
@@ -1497,11 +1523,21 @@ body {
     animation: reviews-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.reviews-empty-anim .MuiRating-decimal:nth-child(1) { animation-delay: 0.15s; }
-.reviews-empty-anim .MuiRating-decimal:nth-child(2) { animation-delay: 0.25s; }
-.reviews-empty-anim .MuiRating-decimal:nth-child(3) { animation-delay: 0.35s; }
-.reviews-empty-anim .MuiRating-decimal:nth-child(4) { animation-delay: 0.45s; }
-.reviews-empty-anim .MuiRating-decimal:nth-child(5) { animation-delay: 0.55s; }
+.reviews-empty-anim .MuiRating-decimal:nth-child(1) {
+    animation-delay: 0.15s;
+}
+.reviews-empty-anim .MuiRating-decimal:nth-child(2) {
+    animation-delay: 0.25s;
+}
+.reviews-empty-anim .MuiRating-decimal:nth-child(3) {
+    animation-delay: 0.35s;
+}
+.reviews-empty-anim .MuiRating-decimal:nth-child(4) {
+    animation-delay: 0.45s;
+}
+.reviews-empty-anim .MuiRating-decimal:nth-child(5) {
+    animation-delay: 0.55s;
+}
 
 @keyframes reviews-rise {
     from {
@@ -1995,7 +2031,12 @@ body {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(to top right, transparent calc(50% - 1px), #8a8a8a 50%, transparent calc(50% + 1px));
+    background: linear-gradient(
+        to top right,
+        transparent calc(50% - 1px),
+        #8a8a8a 50%,
+        transparent calc(50% + 1px)
+    );
 }
 
 .MuiToggleButton-root.cross-out {
@@ -2239,12 +2280,16 @@ body {
 .home-hero .MuiButton-contained {
     background: #fff;
     color: var(--brand-dark);
-    border: 1px solid transparent;      /* keeps size the same on hover */
+    border: 1px solid transparent; /* keeps size the same on hover */
     border-radius: 999px;
     padding: 10px 32px;
     text-transform: none;
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    transition:
+        background-color 0.2s,
+        color 0.2s,
+        border-color 0.2s,
+        box-shadow 0.2s;
     font-weight: 400;
     font-size: medium;
 }
@@ -2273,7 +2318,6 @@ body {
         line-height: 1.1;
     }
 }
-
 
 /* Product grid: 2 columns on phones, 3 on tablets, 4 on desktop */
 .product-grid {
@@ -2377,7 +2421,9 @@ body {
 .product-card-media img {
     position: absolute;
     inset: 0;
-    transition: opacity 0.45s ease, transform 0.4s ease;
+    transition:
+        opacity 0.45s ease,
+        transform 0.4s ease;
 }
 
 /* cancels the old zoom on every card */
@@ -2942,7 +2988,8 @@ body {
     transform: rotate(180deg);
 }
 
-/* Text fades instead of disappearing. On open it waits a moment so it doesn't show before there is room. */
+/* Text fades instead of disappearing. On open it waits a moment so it doesn't
+   show before there is room. */
 .admin-side-text {
     white-space: nowrap;
     transition: opacity 0.2s ease 0.1s;
@@ -2986,7 +3033,9 @@ body {
     overflow: hidden;
     color: #a0a5ad;
     font-size: 0.78rem;
-    transition: opacity 0.2s ease 0.1s, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transition:
+        opacity 0.2s ease 0.1s,
+        max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -3012,7 +3061,9 @@ body {
     color: #6b7280;
     font-size: 0.92rem;
     text-decoration: none;
-    transition: background-color 0.15s, color 0.15s;
+    transition:
+        background-color 0.15s,
+        color 0.15s;
 }
 
 .admin-side-nav a svg {
@@ -3159,7 +3210,7 @@ body {
     display: grid;
     gap: 32px;
     grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
-    align-items: start;
+    align-items: stretch;
 }
 
 .dash-table .MuiTableCell-head {
@@ -3184,6 +3235,8 @@ body {
 }
 
 .dash-congrats.MuiPaper-root {
+    display: flex;
+    flex-direction: column;
     padding: 24px;
     border-radius: 20px;
     background: linear-gradient(135deg, #fbece4 0%, #eef1fb 100%);
@@ -3212,31 +3265,32 @@ body {
 /* ---------- Top sellers carousel ---------- */
 .dash-carousel {
     position: relative;
-    height: 210px;
+    height: 264px;
     margin-top: 20px;
     border-radius: 16px;
-    background: #fff;
+    background: transparent;
     outline-offset: 2px;
 }
 
 .dash-stage {
     position: absolute;
-    inset: 0;
+    inset: -24px 0; /* extra room so the shadow isn't clipped */
     overflow: hidden;
-    border-radius: 16px;
 }
 
 .dash-slide {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 108px;
-    height: 144px;
+    width: 224px;
+    height: 224px;
     padding: 0;
     border: 0;
     background: none;
     cursor: pointer;
-    transition: transform 0.5s cubic-bezier(0.22, 0.8, 0.3, 1), opacity 0.4s ease;
+    transition:
+        transform 0.5s cubic-bezier(0.22, 0.8, 0.3, 1),
+        opacity 0.4s ease;
     will-change: transform, opacity;
 }
 
@@ -3249,14 +3303,14 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 16px;
+    border-radius: 22px;
     background: #f2f3f5;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.5s ease;
 }
 
 .dash-slide.active .dash-slide-img {
-    box-shadow: 0 0 0 6px #fff, 0 16px 34px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
 }
 
 .dash-slide-fallback {
@@ -3274,7 +3328,9 @@ body {
     transform: translateY(-50%);
     background: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    transition:
+        transform 0.15s ease,
+        background-color 0.15s ease;
 }
 
 .dash-carousel-arrow.MuiIconButton-root:hover {
@@ -3311,7 +3367,9 @@ body {
     border-radius: 99px;
     background: rgba(0, 0, 0, 0.18);
     cursor: pointer;
-    transition: width 0.3s ease, background-color 0.3s ease;
+    transition:
+        width 0.3s ease,
+        background-color 0.3s ease;
 }
 
 .dash-dot.active {
@@ -3353,29 +3411,19 @@ body {
     padding: 16px 24px;
     border-bottom: 1px solid #eceef2;
 }
- 
+
 .dash-header-right {
     display: flex;
     align-items: center;
     gap: 16px;
 }
- 
+
 .dash-date {
     display: flex;
     align-items: center;
     gap: 10px;
 }
- 
-.dash-date-icon {
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    color: var(--brand-dark);
-}
- 
+
 .dash-user-btn.MuiButton-root {
     min-width: 0;
     gap: 4px;
@@ -3384,15 +3432,15 @@ body {
     border-radius: 99px;
     color: var(--brand-dark);
 }
- 
+
 .dash-user-chevron {
     transition: transform 0.2s ease;
 }
- 
+
 .dash-user-chevron.open {
     transform: rotate(180deg);
 }
- 
+
 .dash-user-menu.MuiPaper-root {
     min-width: 220px;
     margin-top: 8px;
@@ -3400,7 +3448,7 @@ body {
     border-radius: 14px;
     box-shadow: 0 10px 30px rgba(18, 20, 28, 0.1);
 }
- 
+
 .dash-user-menu-head {
     padding: 12px 16px;
 }
@@ -3442,7 +3490,6 @@ body {
     border-color: var(--brand-accent);
 }
 
-
 .support-page > .support-body {
     animation: none;
 }
@@ -3455,14 +3502,30 @@ body {
     animation: page-enter-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-.support-stagger > *:nth-child(1) { animation-delay: var(--base, 0s); }
-.support-stagger > *:nth-child(2) { animation-delay: calc(var(--base, 0s) + 0.07s); }
-.support-stagger > *:nth-child(3) { animation-delay: calc(var(--base, 0s) + 0.14s); }
-.support-stagger > *:nth-child(4) { animation-delay: calc(var(--base, 0s) + 0.21s); }
-.support-stagger > *:nth-child(5) { animation-delay: calc(var(--base, 0s) + 0.28s); }
-.support-stagger > *:nth-child(6) { animation-delay: calc(var(--base, 0s) + 0.35s); }
-.support-stagger > *:nth-child(7) { animation-delay: calc(var(--base, 0s) + 0.42s); }
-.support-stagger > *:nth-child(n + 8) { animation-delay: calc(var(--base, 0s) + 0.49s); }
+.support-stagger > *:nth-child(1) {
+    animation-delay: var(--base, 0s);
+}
+.support-stagger > *:nth-child(2) {
+    animation-delay: calc(var(--base, 0s) + 0.07s);
+}
+.support-stagger > *:nth-child(3) {
+    animation-delay: calc(var(--base, 0s) + 0.14s);
+}
+.support-stagger > *:nth-child(4) {
+    animation-delay: calc(var(--base, 0s) + 0.21s);
+}
+.support-stagger > *:nth-child(5) {
+    animation-delay: calc(var(--base, 0s) + 0.28s);
+}
+.support-stagger > *:nth-child(6) {
+    animation-delay: calc(var(--base, 0s) + 0.35s);
+}
+.support-stagger > *:nth-child(7) {
+    animation-delay: calc(var(--base, 0s) + 0.42s);
+}
+.support-stagger > *:nth-child(n + 8) {
+    animation-delay: calc(var(--base, 0s) + 0.49s);
+}
 
 .support-body {
     --base: 0.15s;
@@ -3470,7 +3533,10 @@ body {
 
 /* Cards: soft lift on hover, and the icon circle turns dark like the sort-by arrow in the shop */
 .support-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
 }
 
 .support-card-link:hover,
@@ -3481,7 +3547,9 @@ body {
 }
 
 .support-card-icon {
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease;
 }
 
 .support-card-link:hover .support-card-icon,
@@ -3516,7 +3584,10 @@ body {
 
 /* Page links (Contact, Shipping, Return, FAQ) */
 .support-nav .MuiChip-root {
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3532,7 +3603,10 @@ body {
 /* Wishlist */
 .wishlist-btn {
     color: var(--brand-dark) !important;
-    transition: transform 0.2s, background-color 0.2s, color 0.2s;
+    transition:
+        transform 0.2s,
+        background-color 0.2s,
+        color 0.2s;
 }
 
 .wishlist-btn.saved {
@@ -3544,9 +3618,15 @@ body {
 }
 
 @keyframes wishlist-pop {
-    0%   { transform: scale(0.6); }
-    60%  { transform: scale(1.25); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(0.6);
+    }
+    60% {
+        transform: scale(1.25);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* small round heart on the top-right of a product photo */
@@ -3676,8 +3756,17 @@ body {
             'edit edit edit';
     }
 
-    .my-review-row .cart-row-image-link { grid-area: img; }
-    .my-review-row .cart-row-info { grid-area: info; }
-    .my-review-row .cart-row-remove { grid-area: remove; align-self: start; }
-    .my-review-row .wishlist-view-btn.MuiButton-root { grid-area: edit; }
+    .my-review-row .cart-row-image-link {
+        grid-area: img;
+    }
+    .my-review-row .cart-row-info {
+        grid-area: info;
+    }
+    .my-review-row .cart-row-remove {
+        grid-area: remove;
+        align-self: start;
+    }
+    .my-review-row .wishlist-view-btn.MuiButton-root {
+        grid-area: edit;
+    }
 }

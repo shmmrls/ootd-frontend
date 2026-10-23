@@ -1,9 +1,13 @@
-import { useLocation } from 'react-router-dom';
+// Q4 · Clerk login + U2 · UI — shared auth shell.
+// Hosts Login, Register and ForgotPassword in one sliding card with the hero photo panel.
+import { Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Box, Paper, Typography } from '@mui/material';
 import heroImage from '../../assets/ootd-hero.jpg';
 import MetaData from '../Layout/MetaData';
 import Login from './Login';
 import Register from './Register';
+import ForgotPassword from './ForgotPassword';
 import { EASE, fadeIn, floatA, floatB, riseIn, slowZoom } from './authMotion';
 
 const COPY = {
@@ -17,12 +21,17 @@ const COPY = {
         accent: 'Start here.',
         text: 'Make an account to save your bag and check out in a few taps.',
     },
+    forgot: {
+        lines: ['Forgot your', 'password?'],
+        accent: 'Reset it.',
+        text: "We'll email you a code, then you pick a new one. It takes a minute.",
+    },
 };
 
 const reducedMotion = '@media (prefers-reduced-motion: reduce)';
 
-// Both forms sit in the same grid row, so the card is always as tall as the taller form
-// and never needs a scrollbar. The inactive form fades and slides away from the photo.
+// The forms sit in the same grid row, so the card is always as tall as the tallest form
+// and never needs a scrollbar. The inactive forms fade and slide away from the photo.
 const panelSx = (active, side) => ({
     gridRow: 1,
     gridColumn: { xs: 1, md: side === 'left' ? 1 : 2 },
@@ -36,7 +45,9 @@ const panelSx = (active, side) => ({
     pointerEvents: active ? 'auto' : 'none',
     transform: { md: active ? 'translateX(0)' : `translateX(${side === 'left' ? '-14%' : '14%'})` },
     transition: {
-        md: `transform 0.8s ${EASE}, opacity 0.5s ease ${active ? '0.3s' : '0s'}, visibility 0s linear ${active ? '0s' : '0.8s'}`,
+        md:
+            `transform 0.8s ${EASE}, opacity 0.5s ease ${active ? '0.3s' : '0s'}, ` +
+            `visibility 0s linear ${active ? '0s' : '0.8s'}`,
     },
     animation: { xs: active ? `${fadeIn} 0.4s ease` : 'none', md: 'none' },
     [reducedMotion]: { transition: 'none', animation: 'none' },
@@ -44,8 +55,20 @@ const panelSx = (active, side) => ({
 
 export default function AuthPage() {
     const { pathname } = useLocation();
-    const mode = pathname.startsWith('/register') ? 'register' : 'login';
+    const { user } = useSelector((state) => state.auth);
+    if (user?.role === 'admin') {
+        return <Navigate to="/admin" replace />;
+    }
+    const mode = pathname.startsWith('/register')
+        ? 'register'
+        : pathname.startsWith('/forgot-password')
+          ? 'forgot'
+          : 'login';
     const isLogin = mode === 'login';
+    const isRegister = mode === 'register';
+    const isForgot = mode === 'forgot';
+    // The photo covers the half without a form: right for login/forgot, left for register
+    const photoRight = !isRegister;
     const copy = COPY[mode];
 
     return (
@@ -65,7 +88,10 @@ export default function AuthPage() {
                 overflow: 'hidden',
                 boxSizing: 'border-box',
                 background:
-                    'radial-gradient(1200px 600px at 10% -10%, rgba(200,85,61,0.16), transparent 60%), radial-gradient(900px 500px at 100% 110%, rgba(31,31,31,0.10), transparent 60%), linear-gradient(180deg, #fbf9f6 0%, #f1ece6 100%)',
+                    'radial-gradient(1200px 600px at 10% -10%, rgba(200,85,61,0.16), ' +
+                    'transparent 60%), radial-gradient(900px 500px at 100% 110%, ' +
+                    'rgba(31,31,31,0.10), transparent 60%), linear-gradient(180deg, ' +
+                    '#fbf9f6 0%, #f1ece6 100%)',
                 // Soft dot grid
                 '&::before': {
                     content: '""',
@@ -74,11 +100,12 @@ export default function AuthPage() {
                     backgroundImage: 'radial-gradient(rgba(31,31,31,0.10) 1px, transparent 1px)',
                     backgroundSize: '22px 22px',
                     maskImage: 'radial-gradient(ellipse at center, #000 30%, transparent 75%)',
-                    WebkitMaskImage: 'radial-gradient(ellipse at center, #000 30%, transparent 75%)',
+                    WebkitMaskImage:
+                        'radial-gradient(ellipse at center, #000 30%, transparent 75%)',
                 },
             }}
         >
-            <MetaData title={isLogin ? 'Login' : 'Register'} />
+            <MetaData title={isLogin ? 'Login' : isRegister ? 'Register' : 'Forgot password'} />
 
             {/* Drifting colour blobs */}
             <Box
@@ -131,17 +158,22 @@ export default function AuthPage() {
                     borderColor: 'rgba(255,255,255,0.7)',
                     bgcolor: 'background.paper',
                     boxShadow:
-                        '0 2px 4px rgba(31,31,31,0.04), 0 12px 24px rgba(31,31,31,0.08), 0 40px 90px rgba(31,31,31,0.18)',
+                        '0 2px 4px rgba(31,31,31,0.04), 0 12px 24px ' +
+                        'rgba(31,31,31,0.08), 0 40px 90px rgba(31,31,31,0.18)',
                 }}
             >
                 <Box sx={panelSx(isLogin, 'left')}>
                     <Login active={isLogin} />
                 </Box>
-                <Box sx={panelSx(!isLogin, 'right')}>
-                    <Register active={!isLogin} />
+                <Box sx={panelSx(isRegister, 'right')}>
+                    <Register active={isRegister} />
+                </Box>
+                <Box sx={panelSx(isForgot, 'left')}>
+                    <ForgotPassword active={isForgot} />
                 </Box>
 
-                {/* Photo panel: covers the half that isn't in use and glides across when the mode changes */}
+                {/* Photo panel: covers the half that isn't in use and glides across
+                    when the mode changes */}
                 <Box
                     sx={{
                         display: { xs: 'none', md: 'block' },
@@ -154,7 +186,7 @@ export default function AuthPage() {
                         overflow: 'hidden',
                         bgcolor: 'primary.main',
                         color: '#faf8f5',
-                        transform: isLogin ? 'translateX(100%)' : 'translateX(0)',
+                        transform: photoRight ? 'translateX(100%)' : 'translateX(0)',
                         transition: `transform 0.8s ${EASE}`,
                         [reducedMotion]: { transition: 'none' },
                     }}
@@ -175,7 +207,8 @@ export default function AuthPage() {
                             position: 'absolute',
                             inset: 0,
                             background:
-                                'linear-gradient(180deg, rgba(20,20,20,0.55) 0%, rgba(20,20,20,0.15) 40%, rgba(20,20,20,0.85) 100%)',
+                                'linear-gradient(180deg, rgba(20,20,20,0.55) 0%, ' +
+                                'rgba(20,20,20,0.15) 40%, rgba(20,20,20,0.85) 100%)',
                         }}
                     />
 
@@ -195,18 +228,32 @@ export default function AuthPage() {
                         </Typography>
 
                         {/* Keyed so the copy re-enters each time the panel changes sides */}
-                        <Box key={mode} sx={{ animation: `${riseIn} 0.8s ${EASE} 0.35s both`, [reducedMotion]: { animation: 'none' } }}>
-                            <Typography variant="h2" sx={{ fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+                        <Box
+                            key={mode}
+                            sx={{
+                                animation: `${riseIn} 0.8s ${EASE} 0.35s both`,
+                                [reducedMotion]: { animation: 'none' },
+                            }}
+                        >
+                            <Typography
+                                variant="h2"
+                                sx={{ fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' }}
+                            >
                                 {copy.lines.map((line) => (
                                     <Box component="span" key={line} sx={{ display: 'block' }}>
                                         {line}
                                     </Box>
                                 ))}
-                                <Box component="span" sx={{ display: 'block', color: 'secondary.main' }}>
+                                <Box
+                                    component="span"
+                                    sx={{ display: 'block', color: 'secondary.main' }}
+                                >
                                     {copy.accent}
                                 </Box>
                             </Typography>
-                            <Typography sx={{ mt: 2, maxWidth: 320, opacity: 0.8 }}>{copy.text}</Typography>
+                            <Typography sx={{ mt: 2, maxWidth: 320, opacity: 0.8 }}>
+                                {copy.text}
+                            </Typography>
                         </Box>
                     </Box>
                 </Box>

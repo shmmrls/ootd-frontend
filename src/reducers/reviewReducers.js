@@ -1,3 +1,5 @@
+// MP3 · Review ratings — review state.
+// Tracks product reviews, review status, admin list and my-reviews from reviewActions.
 import {
     PRODUCT_REVIEWS_REQUEST,
     PRODUCT_REVIEWS_SUCCESS,
@@ -14,6 +16,18 @@ import {
     MY_REVIEW_LIST_REQUEST,
     MY_REVIEW_LIST_SUCCESS,
     MY_REVIEW_LIST_FAIL,
+    NEW_REVIEW_REQUEST,
+    NEW_REVIEW_SUCCESS,
+    NEW_REVIEW_FAIL,
+    NEW_REVIEW_RESET,
+    UPDATE_REVIEW_REQUEST,
+    UPDATE_REVIEW_SUCCESS,
+    UPDATE_REVIEW_FAIL,
+    UPDATE_REVIEW_RESET,
+    DELETE_REVIEW_REQUEST,
+    DELETE_REVIEW_SUCCESS,
+    DELETE_REVIEW_FAIL,
+    DELETE_REVIEW_RESET,
 } from '../constants/reviewConstants';
 import { CLEAR_ERRORS, LOGOUT_SUCCESS } from '../constants/userConstants';
 
@@ -24,7 +38,7 @@ const noVariants = { sizes: [], colors: [] };
 
 export const productReviewsReducer = (
     state = { reviews: [], productId: null, summary: null, variantOptions: noVariants },
-    action
+    action,
 ) => {
     switch (action.type) {
         case PRODUCT_REVIEWS_REQUEST:
@@ -46,7 +60,10 @@ export const productReviewsReducer = (
     }
 };
 
-export const reviewStatusReducer = (state = { productId: null, canReview: false, review: null }, action) => {
+export const reviewStatusReducer = (
+    state = { productId: null, canReview: false, review: null },
+    action,
+) => {
     switch (action.type) {
         case REVIEW_STATUS_REQUEST:
             return { productId: null, canReview: false, review: null, loading: true };
@@ -92,7 +109,10 @@ export const myReviewsReducer = (state = { reviews: [] }, action) => {
 
 // The "My reviews" page: full reviews with their product. Kept apart from myReviews above,
 // where product is just an id that the order page compares against.
-export const myReviewListReducer = (state = { reviews: [], loading: false, loaded: false }, action) => {
+export const myReviewListReducer = (
+    state = { reviews: [], loading: false, loaded: false },
+    action,
+) => {
     switch (action.type) {
         case MY_REVIEW_LIST_REQUEST:
             return { ...state, loading: true };
@@ -103,6 +123,48 @@ export const myReviewListReducer = (state = { reviews: [], loading: false, loade
         // Never carry one person's reviews over to the next person on this browser
         case LOGOUT_SUCCESS:
             return { reviews: [], loading: false, loaded: false };
+        case CLEAR_ERRORS:
+            return { ...state, error: null };
+        default:
+            return state;
+    }
+};
+
+// Writing a new review
+export const newReviewReducer = (state = {}, action) => {
+    switch (action.type) {
+        case NEW_REVIEW_REQUEST:
+            return { loading: true };
+        case NEW_REVIEW_SUCCESS:
+            return { loading: false, success: true };
+        case NEW_REVIEW_FAIL:
+            return { loading: false, error: action.payload };
+        case NEW_REVIEW_RESET:
+            return {};
+        case CLEAR_ERRORS:
+            return { ...state, error: null };
+        default:
+            return state;
+    }
+};
+
+// Editing or deleting an existing review
+export const reviewReducer = (state = {}, action) => {
+    switch (action.type) {
+        case UPDATE_REVIEW_REQUEST:
+        case DELETE_REVIEW_REQUEST:
+            return { ...state, loading: true };
+        case UPDATE_REVIEW_SUCCESS:
+            return { ...state, loading: false, isUpdated: true };
+        case DELETE_REVIEW_SUCCESS:
+            return { ...state, loading: false, isDeleted: true };
+        case UPDATE_REVIEW_FAIL:
+        case DELETE_REVIEW_FAIL:
+            return { ...state, loading: false, error: action.payload };
+        case UPDATE_REVIEW_RESET:
+            return { ...state, isUpdated: false };
+        case DELETE_REVIEW_RESET:
+            return { ...state, isDeleted: false };
         case CLEAR_ERRORS:
             return { ...state, error: null };
         default:

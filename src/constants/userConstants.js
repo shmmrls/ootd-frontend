@@ -1,3 +1,5 @@
+// Q4 · Clerk login — user/auth action type constants.
+// Consumed by reducers/userReducers.js for login, profile and admin-user state.
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAIL = 'LOGIN_FAIL';
@@ -20,11 +22,6 @@ export const UPDATE_PROFILE_RESET = 'UPDATE_PROFILE_RESET';
 
 export const CLEAR_ERRORS = 'CLEAR_ERRORS';
 
-export const FORGOT_PASSWORD_REQUEST = 'FORGOT_PASSWORD_REQUEST';
-export const FORGOT_PASSWORD_SUCCESS = 'FORGOT_PASSWORD_SUCCESS';
-export const FORGOT_PASSWORD_FAIL = 'FORGOT_PASSWORD_FAIL';
-export const FORGOT_PASSWORD_RESET = 'FORGOT_PASSWORD_RESET';
-
 export const ALL_USERS_REQUEST = 'ALL_USERS_REQUEST';
 export const ALL_USERS_SUCCESS = 'ALL_USERS_SUCCESS';
 export const ALL_USERS_FAIL = 'ALL_USERS_FAIL';
@@ -37,7 +34,6 @@ export const UPDATE_USER_REQUEST = 'UPDATE_USER_REQUEST';
 export const UPDATE_USER_SUCCESS = 'UPDATE_USER_SUCCESS';
 export const UPDATE_USER_FAIL = 'UPDATE_USER_FAIL';
 export const UPDATE_USER_RESET = 'UPDATE_USER_RESET';
-
 
 export const UPDATE_PASSWORD_REQUEST = 'UPDATE_PASSWORD_REQUEST';
 export const UPDATE_PASSWORD_SUCCESS = 'UPDATE_PASSWORD_SUCCESS';

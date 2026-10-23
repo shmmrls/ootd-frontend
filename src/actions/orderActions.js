@@ -1,3 +1,5 @@
+// TTL · Transactions — order thunks.
+// createOrder/getMyOrders/getOrderDetails/getAdminOrders/updateOrder/downloadReceipt call the order API.
 import api from '../api';
 import { getErrorMessage } from '../Utils/helpers';
 import {
@@ -13,6 +15,9 @@ import {
     ADMIN_ORDERS_REQUEST,
     ADMIN_ORDERS_SUCCESS,
     ADMIN_ORDERS_FAIL,
+    PROCESSING_COUNT_REQUEST,
+    PROCESSING_COUNT_SUCCESS,
+    PROCESSING_COUNT_FAIL,
     UPDATE_ORDER_REQUEST,
     UPDATE_ORDER_SUCCESS,
     UPDATE_ORDER_FAIL,
@@ -57,9 +62,23 @@ export const getAdminOrders = () => async (dispatch) => {
     try {
         dispatch({ type: ADMIN_ORDERS_REQUEST });
         const { data } = await api.get('/admin/orders');
-        dispatch({ type: ADMIN_ORDERS_SUCCESS, payload: { orders: data.orders, totalAmount: data.totalAmount } });
+        dispatch({
+            type: ADMIN_ORDERS_SUCCESS,
+            payload: { orders: data.orders, totalAmount: data.totalAmount },
+        });
     } catch (error) {
         dispatch({ type: ADMIN_ORDERS_FAIL, payload: getErrorMessage(error) });
+    }
+};
+
+// Badge count: orders still in Processing. Failures are silent because the badge is optional.
+export const getProcessingCount = () => async (dispatch) => {
+    try {
+        dispatch({ type: PROCESSING_COUNT_REQUEST });
+        const { data } = await api.get('/admin/orders/processing-count');
+        dispatch({ type: PROCESSING_COUNT_SUCCESS, payload: data.count });
+    } catch (error) {
+        dispatch({ type: PROCESSING_COUNT_FAIL, payload: getErrorMessage(error) });
     }
 };
 
@@ -72,7 +91,6 @@ export const updateOrder = (id, status) => async (dispatch) => {
         dispatch({ type: UPDATE_ORDER_FAIL, payload: getErrorMessage(error) });
     }
 };
-
 
 // Downloads the order's PDF receipt. Returns an error message, or null when it worked.
 export const downloadReceipt = (id) => async () => {

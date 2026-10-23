@@ -1,13 +1,17 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+// Q4 · Clerk login + U1-B · Validation — sign-in form.
+// Formik + Yup validated; signs in via Clerk and offers the Google social button.
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSignIn } from '@clerk/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Box, Button, Divider, InputAdornment, TextField } from '@mui/material';
+import { Box, Button, Divider, InputAdornment, Link, TextField } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import AuthHeading from './AuthHeading';
 import AuthSwitch from './AuthSwitch';
 import SocialButtons from './SocialButtons';
 import { staggerFields } from './authMotion';
+import { useDispatch } from 'react-redux';
+import { getPostLoginPath, syncUser } from '../../actions/userActions';
 import PasswordField from './PasswordField';
 import { notifyError, notifySuccess } from '../../Utils/helpers';
 
@@ -18,6 +22,7 @@ const validationSchema = Yup.object({
 
 export default function Login({ active = true }) {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const location = useLocation();
     const redirectTo = location.state?.from?.pathname || '/';
     const { signIn, fetchStatus } = useSignIn();
@@ -38,12 +43,25 @@ export default function Login({ active = true }) {
                 return;
             }
             if (signIn.status === 'complete') {
-                await signIn.finalize({
-                    navigate: () => {
-                        notifySuccess('Welcome back!');
-                        navigate(redirectTo, { replace: true });
+                // finalize()'s navigate callback runs BEFORE the session is active, so
+                // calling /me from inside it has no token and fails. Just capture
+                // decorateUrl there, then sync our database user and route by role.
+                let decorate = (url) => url;
+                const finalized = await signIn.finalize({
+                    navigate: ({ decorateUrl }) => {
+                        decorate = decorateUrl;
                     },
                 });
+                if (finalized.error) {
+                    notifyError(finalized.error.longMessage || finalized.error.message);
+                    return;
+                }
+                // Wait for our database user so we know whether this is an admin
+                const user = await dispatch(syncUser(true));
+                notifySuccess('Welcome back!');
+                const target = decorate(getPostLoginPath(user, redirectTo));
+                if (target.startsWith('http')) window.location.href = target;
+                else navigate(target, { replace: true });
             } else {
                 notifyError(`Sign-in not complete (${signIn.status})`);
             }
@@ -53,16 +71,7 @@ export default function Login({ active = true }) {
     const handleGoogle = async () => {
         const { error } = await signIn.sso({
             strategy: 'oauth_google',
-            redirectUrl: '/',
-            redirectCallbackUrl: '/sso-callback',
-        });
-        if (error) notifyError(error.longMessage || error.message);
-    };
-
-    const handleFacebook = async () => {
-        const { error } = await signIn.sso({
-            strategy: 'oauth_facebook',
-            redirectUrl: '/',
+            redirectUrl: '/sso-callback',
             redirectCallbackUrl: '/sso-callback',
         });
         if (error) notifyError(error.longMessage || error.message);
@@ -107,11 +116,16 @@ export default function Login({ active = true }) {
                     error={Boolean(formik.errors.password)}
                     helperText={formik.errors.password}
                 />
+                <Box sx={{ textAlign: 'right', mt: -1 }}>
+                    <Link component={RouterLink} to="/forgot-password" variant="body2" underline="hover">
+                        Forgot password?
+                    </Link>
+                </Box>
                 <Button type="submit" variant="contained" size="large" fullWidth disabled={loading}>
                     {loading ? 'Please wait...' : 'Login'}
                 </Button>
                 <Divider>or</Divider>
-                <SocialButtons onGoogle={handleGoogle} onFacebook={handleFacebook} disabled={loading} />
+                <SocialButtons onGoogle={handleGoogle} disabled={loading} />
                 <AuthSwitch prompt="Don't have an account?" cta="Sign up" to="/register" />
             </Box>
         </>

@@ -1,3 +1,5 @@
+// Q4 · Clerk login — auth/user state.
+// authReducer holds the signed-in user; the rest cover profile, password and admin user screens.
 import {
     LOGIN_REQUEST,
     LOGIN_SUCCESS,
@@ -14,10 +16,6 @@ import {
     UPDATE_PROFILE_FAIL,
     UPDATE_PROFILE_RESET,
     CLEAR_ERRORS,
-    FORGOT_PASSWORD_REQUEST,
-    FORGOT_PASSWORD_SUCCESS,
-    FORGOT_PASSWORD_FAIL,
-    FORGOT_PASSWORD_RESET,
     ALL_USERS_REQUEST,
     ALL_USERS_SUCCESS,
     ALL_USERS_FAIL,
@@ -94,23 +92,6 @@ export const userReducer = (state = {}, action) => {
     }
 };
 
-export const forgotPasswordReducer = (state = {}, action) => {
-    switch (action.type) {
-        case FORGOT_PASSWORD_REQUEST:
-            return { loading: true, error: null, message: null };
-        case FORGOT_PASSWORD_SUCCESS:
-            return { loading: false, message: action.payload };
-        case FORGOT_PASSWORD_FAIL:
-            return { loading: false, error: action.payload };
-        case FORGOT_PASSWORD_RESET:
-            return {};
-        case CLEAR_ERRORS:
-            return { ...state, error: null };
-        default:
-            return state;
-    }
-};
-
 // Admin: all accounts
 export const allUsersReducer = (state = { users: [] }, action) => {
     switch (action.type) {
@@ -128,7 +109,10 @@ export const allUsersReducer = (state = { users: [] }, action) => {
 };
 
 // Admin: one account
-export const userDetailsReducer = (state = { user: null, orderCount: 0, totalSpent: 0, recentOrders: [] }, action) => {
+export const userDetailsReducer = (
+    state = { user: null, orderCount: 0, totalSpent: 0, recentOrders: [] },
+    action,
+) => {
     switch (action.type) {
         case USER_DETAILS_REQUEST:
             return { ...state, loading: true, error: null };
@@ -141,7 +125,14 @@ export const userDetailsReducer = (state = { user: null, orderCount: 0, totalSpe
                 recentOrders: action.payload.recentOrders,
             };
         case USER_DETAILS_FAIL:
-            return { loading: false, user: null, orderCount: 0, totalSpent: 0, recentOrders: [], error: action.payload };
+            return {
+                loading: false,
+                user: null,
+                orderCount: 0,
+                totalSpent: 0,
+                recentOrders: [],
+                error: action.payload,
+            };
         case CLEAR_ERRORS:
             return { ...state, error: null };
         default:
